@@ -281,7 +281,7 @@ static int gpio_esp32_init(const struct device *device)
 		IRQ_CONNECT(CONFIG_GPIO_ESP32_IRQ, 1, gpio_esp32_isr,
 			    NULL, 0);
 
-		esp32_rom_intr_matrix_set(0, ETS_GPIO_INTR_SOURCE,
+		intr_matrix_set(0, ETS_GPIO_INTR_SOURCE,
 					  CONFIG_GPIO_ESP32_IRQ);
 
 		irq_enable(CONFIG_GPIO_ESP32_IRQ);

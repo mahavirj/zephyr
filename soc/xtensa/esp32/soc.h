@@ -24,9 +24,7 @@ static inline void esp32_clear_mask32(uint32_t v, uint32_t mem_addr)
 	sys_write32(sys_read32(mem_addr) & ~v, mem_addr);
 }
 
-extern int esp32_rom_intr_matrix_set(int cpu_no,
-				     int interrupt_src,
-				     int interrupt_line);
+extern void intr_matrix_set(int cpu_no, uint32_t model_num, uint32_t intr_num);
 
 extern int esp32_rom_gpio_matrix_in(uint32_t gpio, uint32_t signal_index,
 				    bool inverted);

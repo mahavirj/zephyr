@@ -690,7 +690,7 @@ static int i2c_esp32_init(const struct device *dev)
 	 * interrupt sources in the I2C controller.
 	 */
 	sys_write32(0, I2C_INT_ENA_REG(config->index));
-	esp32_rom_intr_matrix_set(0, config->irq.source, config->irq.line);
+	intr_matrix_set(0, config->irq.source, config->irq.line);
 
 	config->connect_irq();
 	irq_unlock(key);

@@ -228,7 +228,7 @@ static const struct wdt_driver_api wdt_api = {
 	DEVICE_DECLARE(wdt_esp32_##idx);								   \
 	static void wdt_esp32_connect_irq_func##idx(void)						   \
 	{												   \
-		esp32_rom_intr_matrix_set(0, ETS_TG##idx##_WDT_LEVEL_INTR_SOURCE,			   \
+		intr_matrix_set(0, ETS_TG##idx##_WDT_LEVEL_INTR_SOURCE,			   \
 					  CONFIG_WDT##idx##_ESP32_IRQ);					   \
 		IRQ_CONNECT(CONFIG_WDT##idx##_ESP32_IRQ,						   \
 			    4,										   \
