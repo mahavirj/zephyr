@@ -266,6 +266,7 @@ static int clock_control_esp32_get_rate(const struct device *dev,
 
 static int clock_control_esp32_init(const struct device *dev)
 {
+#if !CONFIG_BOOTLOADER_ESP_IDF
 	struct esp32_clock_config *cfg = DEV_CFG(dev);
 
 	/* Wait for UART first before changing freq to avoid garbage on console */
@@ -291,6 +292,7 @@ static int clock_control_esp32_init(const struct device *dev)
 	 * New CCOUNT = Current CCOUNT * (new freq / old freq)
 	 */
 	XTHAL_SET_CCOUNT((uint64_t)XTHAL_GET_CCOUNT() * cfg->cpu_freq / xtal_freq[cfg->xtal_freq_sel]);
+#endif
 	return 0;
 }
 

@@ -167,6 +167,7 @@ static struct pinmux_driver_api api_funcs = {
 
 static int pinmux_initialize(const struct device *device)
 {
+#if !CONFIG_BOOTLOADER_ESP_IDF
 	uint32_t pin;
 
 	for (pin = 0U; pin < ARRAY_SIZE(pin_mux_off); pin++) {
@@ -174,6 +175,7 @@ static int pinmux_initialize(const struct device *device)
 	}
 
 	ARG_UNUSED(device);
+#endif
 	return 0;
 }
 
