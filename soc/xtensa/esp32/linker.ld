@@ -19,6 +19,8 @@
 
 #define RAMABLE_REGION dram0_0_seg :dram0_0_phdr
 #define ROMABLE_REGION iram0_0_seg :iram0_0_phdr
+#define FLASH_CODE_REGION irom0_0_seg :irom0_0_phdr
+#define FLASH_DATA_REGION drom0_0_seg :drom0_0_phdr
 
 PROVIDE ( __stack = 0x3ffe3f20 );
 
@@ -34,13 +36,14 @@ PROVIDE ( esp32_rom_Cache_Read_Enable = 0x40009a84 );
 PROVIDE ( esp32_rom_ets_set_appcpu_boot_addr = 0x4000689c );
 PROVIDE ( esp32_rom_i2c_readReg = 0x40004148 );
 PROVIDE ( esp32_rom_i2c_writeReg = 0x400041a4 );
+PROVIDE ( ets_printf = 0x40007d54 );
 
 MEMORY
 {
   iram0_0_seg(RX): org = 0x40080000, len = 0x20000
-  iram0_2_seg(RX): org = 0x400D0018, len = 0x330000
+  irom0_0_seg(RX): org = 0x400D0020, len = 0x330000-0x20
   dram0_0_seg(RW): org = 0x3FFB0000, len = 0x50000
-  drom0_0_seg(R): org = 0x3F400010, len = 0x800000
+  drom0_0_seg(R): org = 0x3F400020, len = 0x400000-0x20
   rtc_iram_seg(RWX): org = 0x400C0000, len = 0x2000
   rtc_slow_seg(RW): org = 0x50000000, len = 0x1000
 #ifdef CONFIG_GEN_ISR_TABLES
@@ -50,8 +53,10 @@ MEMORY
 
 PHDRS
 {
-  iram0_0_phdr PT_LOAD;
+  drom0_0_phdr PT_LOAD;
   dram0_0_phdr PT_LOAD;
+  iram0_0_phdr PT_LOAD;
+  irom0_0_phdr PT_LOAD;
 }
 
 /*  Default entry point:  */
@@ -151,7 +156,18 @@ SECTIONS
     _iram_text_start = ABSOLUTE(.);
     *(.iram1 .iram1.*)
     *(.iram0.literal .iram.literal .iram.text.literal .iram0.text .iram.text)
-    *(.literal .text .literal.* .text.*)
+    *libesp32.a:panic.*(.literal .text .literal.* .text.*)
+    *librtc.a:(.literal .text .literal.* .text.*)
+    *libsoc.a:rtc_*.*(.literal .text .literal.* .text.*)
+    *libsoc.a:cpu_util.*(.literal .text .literal.* .text.*)
+    *libhal.a:(.literal .text .literal.* .text.*)
+    *libgcc.a:lib2funcs.*(.literal .text .literal.* .text.*)
+    *libspi_flash.a:spi_flash_rom_patch.*(.literal .text .literal.* .text.*)
+    *libgcov.a:(.literal .text .literal.* .text.*)
+    *libnet80211.a:( .wifi0iram  .wifi0iram.*)
+    *libpp.a:( .wifi0iram  .wifi0iram.*)
+    *libnet80211.a:( .wifirxiram  .wifirxiram.*)
+    *libpp.a:( .wifirxiram  .wifirxiram.*)
     _iram_text_end = ABSOLUTE(.);
   } GROUP_LINK_IN(ROMABLE_REGION)
 
@@ -174,7 +190,7 @@ SECTIONS
     . = ALIGN(4);
   } GROUP_LINK_IN(RAMABLE_REGION)
 
-  SECTION_PROLOGUE(_RODATA_SECTION_NAME,,ALIGN(4))
+  SECTION_PROLOGUE(_RODATA_SECTION_NAME,,ALIGN(16))
   {
     _rodata_start = ABSOLUTE(.);
     *(.rodata)
@@ -206,8 +222,23 @@ SECTIONS
     *(.gnu.version_d)
     . = ALIGN(4);               /* this table MUST be 4-byte aligned */
     _rodata_end = ABSOLUTE(.);
-  } GROUP_LINK_IN(RAMABLE_REGION)
+  } GROUP_LINK_IN(FLASH_DATA_REGION)
 
+  .flash.text :
+  {
+    _stext = .;
+    _text_start = ABSOLUTE(.);
+
+    *(.literal .text .literal.* .text.*)
+    _text_end = ABSOLUTE(.);
+    _etext = .;
+
+    /* Similar to _iram_start, this symbol goes here so it is
+       resolved by addr2line in preference to the first symbol in
+       the flash.text segment.
+    */
+    _flash_cache_start = ABSOLUTE(0);
+  } GROUP_LINK_IN(FLASH_CODE_REGION)
 
   /* Shared RAM */
   SECTION_DATA_PROLOGUE(_BSS_SECTION_NAME,(NOLOAD),)
