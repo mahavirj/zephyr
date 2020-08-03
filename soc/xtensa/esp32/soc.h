@@ -8,7 +8,7 @@
 #define __SOC_H__
 #include <soc/dport_reg.h>
 #include <soc/rtc_cntl_reg.h>
-#include <rom/ets_sys.h>
+#include <esp32/rom/ets_sys.h>
 
 #include <zephyr/types.h>
 #include <stdbool.h>
