@@ -35,8 +35,15 @@ PROVIDE ( esp32_rom_Cache_Read_Enable = 0x40009a84 );
 PROVIDE ( esp32_rom_ets_set_appcpu_boot_addr = 0x4000689c );
 PROVIDE ( esp32_rom_i2c_readReg = 0x40004148 );
 PROVIDE ( esp32_rom_i2c_writeReg = 0x400041a4 );
+PROVIDE ( phy_get_romfuncs = 0x40004100 );
 PROVIDE ( ets_printf = 0x40007d54 );
 PROVIDE ( intr_matrix_set = 0x4000681c );
+PROVIDE ( gpio_output_set = 0x40009b24 );
+PROVIDE ( gpio_output_set_high = 0x40009b5c );
+PROVIDE ( roundup2 = 0x4000ab7c );
+PROVIDE ( ets_delay_us = 0x40008534 );
+PROVIDE ( crc32_le = 0x4005cfec );
+PROVIDE ( g_ticks_per_us_pro = 0x3ffe01e0 );
 
 MEMORY
 {
