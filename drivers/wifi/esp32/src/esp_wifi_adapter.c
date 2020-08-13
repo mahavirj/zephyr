@@ -92,7 +92,8 @@ IRAM_ATTR void *wifi_malloc(size_t size)
  */
 IRAM_ATTR void *wifi_realloc(void *ptr, size_t size)
 {
-    return realloc(ptr, size);
+	ESP_LOGE(TAG, "%s not yet supported", __func__);
+	return NULL;
 }
 
 /*
@@ -456,7 +457,8 @@ static void * IRAM_ATTR malloc_internal_wrapper(size_t size)
 
 static void * IRAM_ATTR realloc_internal_wrapper(void *ptr, size_t size)
 {
-    return realloc(ptr, size);
+	ESP_LOGE(TAG, "%s not yet supported", __func__);
+	return NULL;
 }
 
 static void * IRAM_ATTR calloc_internal_wrapper(size_t n, size_t size)
