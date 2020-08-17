@@ -44,6 +44,7 @@ PROVIDE ( roundup2 = 0x4000ab7c );
 PROVIDE ( ets_delay_us = 0x40008534 );
 PROVIDE ( crc32_le = 0x4005cfec );
 PROVIDE ( g_ticks_per_us_pro = 0x3ffe01e0 );
+PROVIDE ( g_ticks_per_us_app = 0x3ffe40f0 );
 
 MEMORY
 {
