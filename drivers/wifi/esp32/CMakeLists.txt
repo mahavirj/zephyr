@@ -75,6 +75,7 @@ zephyr_sources(
   ${ESP_IDF_PATH}/components/log/log_noos.c
   ${ESP_IDF_PATH}/components/log/log.c
   ${WPA_SUPPLICANT_SRCS}
+  src/esp_wifi_drv.c
   )
 
 zephyr_include_directories(
