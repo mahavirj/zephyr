@@ -18,9 +18,9 @@
 #include <linker/linker-tool.h>
 
 #define RAMABLE_REGION dram0_0_seg :dram0_0_phdr
-#define ROMABLE_REGION iram0_0_seg :iram0_0_phdr
+#define ROMABLE_REGION drom0_0_seg :drom0_0_phdr
+#define IRAM_REGION iram0_0_seg :iram0_0_phdr
 #define FLASH_CODE_REGION irom0_0_seg :irom0_0_phdr
-#define FLASH_DATA_REGION drom0_0_seg :drom0_0_phdr
 
 PROVIDE ( __stack = 0x3ffe3f20 );
 
@@ -153,7 +153,7 @@ SECTIONS
     /* This goes here, not at top of linker script, so addr2line finds it last,
        and uses it in preference to the first symbol in IRAM */
     _iram_start = ABSOLUTE(0);
-  } GROUP_LINK_IN(ROMABLE_REGION)
+  } GROUP_LINK_IN(IRAM_REGION)
 
 #include <linker/common-ram.ld>
 #include <linker/common-rom.ld>
@@ -177,7 +177,7 @@ SECTIONS
     *libnet80211.a:( .wifirxiram  .wifirxiram.*)
     *libpp.a:( .wifirxiram  .wifirxiram.*)
     _iram_text_end = ABSOLUTE(.);
-  } GROUP_LINK_IN(ROMABLE_REGION)
+  } GROUP_LINK_IN(IRAM_REGION)
 
   .dram0.data :
   {
@@ -230,7 +230,7 @@ SECTIONS
     *(.gnu.version_d)
     . = ALIGN(4);               /* this table MUST be 4-byte aligned */
     _rodata_end = ABSOLUTE(.);
-  } GROUP_LINK_IN(FLASH_DATA_REGION)
+  } GROUP_LINK_IN(ROMABLE_REGION)
 
   .flash.text :
   {
