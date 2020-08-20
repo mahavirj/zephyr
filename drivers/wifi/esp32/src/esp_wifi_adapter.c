@@ -6,6 +6,7 @@
 
 #include <zephyr.h>
 #include <sys/printk.h>
+#include <random/rand32.h>
 
 #define CONFIG_POSIX_FS
 
@@ -561,11 +562,6 @@ uint32_t esp_get_free_heap_size(void)
     return 10000;
 }
 
-uint32_t zephyr_random(void)
-{
-    return sys_rand32_get();
-}
-
 unsigned long random(void)
 {
     return sys_rand32_get();
@@ -701,7 +697,7 @@ wifi_osi_funcs_t g_wifi_osi_funcs = {
     ._malloc = k_malloc,
     ._free = k_free,
     ._get_free_heap_size = esp_get_free_heap_size,
-    ._rand = zephyr_random,
+    ._rand = sys_rand32_get,
     ._dport_access_stall_other_cpu_start_wrap = s_esp_dport_access_stall_other_cpu_start,
     ._dport_access_stall_other_cpu_end_wrap = s_esp_dport_access_stall_other_cpu_end,
     ._phy_rf_deinit = esp_phy_rf_deinit,

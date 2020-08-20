@@ -20,6 +20,7 @@
 #include <drivers/clock_control.h>
 #include <sys/util.h>
 #include "clock_control_esp32.h"
+#include "driver/periph_ctrl.h"
 
 struct esp32_clock_config {
 	uint32_t clk_src_sel;
@@ -66,10 +67,6 @@ struct pll_cfg {
 #define GET_REG_OFFSET(module_id)   ((uint32_t)module_id % 32U)
 
 #define CLOCK_REGS_BANK_COUNT 	    3
-
-// g_ticks_us defined in ROMs for PRO and APP CPU
-extern uint32_t g_ticks_per_us_pro;
-extern uint32_t g_ticks_per_us_app;
 
 const struct control_regs clock_control_regs[CLOCK_REGS_BANK_COUNT] = {
 	[0] = { .clk = DPORT_PERIP_CLK_EN_REG, .rst = DPORT_PERIP_RST_EN_REG },
@@ -179,11 +176,21 @@ static inline uint32_t clk_val_to_reg_val(uint32_t val) {
     return (val & UINT16_MAX) | ((val & UINT16_MAX) << 16);
 }
 
+int IRAM_ATTR esp_clk_cpu_freq(void)
+{
+	return MHZ(g_ticks_per_us_pro);
+}
+
+int IRAM_ATTR esp_clk_apb_freq(void)
+{
+	return MHZ(MIN(g_ticks_per_us_pro, 80));
+}
+
 void IRAM_ATTR ets_update_cpu_frequency(uint32_t ticks_per_us)
 {
-    /* Update scale factors used by ets_delay_us */
-    g_ticks_per_us_pro = ticks_per_us;
-    g_ticks_per_us_app = ticks_per_us;
+	/* Update scale factors used by ets_delay_us */
+	g_ticks_per_us_pro = ticks_per_us;
+	g_ticks_per_us_app = ticks_per_us;
 }
 
 static void esp32_cpu_freq_to_xtal(int freq, int div)
@@ -328,6 +335,9 @@ static int clock_control_esp32_init(const struct device *dev)
 	default:
 		return -EINVAL;
 	}
+
+	/* Enable RNG clock. */
+	periph_module_enable(PERIPH_RNG_MODULE);
 
 	/* Re-calculate the CCOUNT register value to make time calculation correct.
 	 * This should be updated on each frequency change

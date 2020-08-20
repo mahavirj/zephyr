@@ -126,7 +126,7 @@
 			reg = <0x3FF75144 0x4>;
 			/* interrupts = <33 0>; - FIXME: Enable interrupts when interrupt-controller got supported in device tree */
 			label = "TRNG_0";
-			status = "disabled";
+			status = "okay";
 		};
 
 		wdt0: watchdog@3ff5f048 {
