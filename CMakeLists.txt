@@ -1368,5 +1368,5 @@ endif()
 # Done at the very end, so any other system includes which may
 # be added by Zephyr components were first in list.
 # Note, the compile flags are moved, but the system include is still present here.
-#zephyr_compile_options($<TARGET_PROPERTY:compiler,nostdinc>)
+zephyr_compile_options($<TARGET_PROPERTY:compiler,nostdinc>)
 target_include_directories(zephyr_interface SYSTEM INTERFACE $<TARGET_PROPERTY:compiler,nostdinc_include>)
