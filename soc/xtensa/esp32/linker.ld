@@ -18,6 +18,7 @@
 #include <linker/linker-tool.h>
 
 #define RAMABLE_REGION dram0_0_seg :dram0_0_phdr
+#define RAMABLE_REGION_1 dram0_1_seg :dram0_1_phdr
 #define ROMABLE_REGION drom0_0_seg :drom0_0_phdr
 #define IRAM_REGION iram0_0_seg :iram0_0_phdr
 #define FLASH_CODE_REGION irom0_0_seg :irom0_0_phdr
@@ -50,7 +51,21 @@ MEMORY
 {
   iram0_0_seg(RX): org = 0x40080000, len = 0x20000
   irom0_0_seg(RX): org = 0x400D0020, len = 0x330000-0x20
-  dram0_0_seg(RW): org = 0x3FFB0000, len = 0x50000
+  /*
+   * Following is DRAM memory split with reserved address ranges in ESP32:
+   *
+   * 0x3FFA_E000 - 0x3FFB_0000 (Reserved: data memory for ROM functions)
+   * 0x3FFB_0000 - 0x3FFE_0000 (RAM bank 1 for application usage)
+   * 0x3FFE_0000 - 0x3FFE_0440 (Reserved: data memory for ROM PRO CPU)
+   * 0x3FFE_3F20 - 0x3FFE_4350 (Reserved: data memory for ROM APP CPU)
+   * 0x3FFE_4350 - 0x3F10_0000 (RAM bank 2 for application usage)
+   *
+   * FIXME:
+   *  - Utilize available memory regions to full capacity
+   *  - Reserve memory region for BT controller library from ROM
+   */
+  dram0_0_seg(RW): org = 0x3FFB0000, len = 0x30000
+  dram0_1_seg(RW): org = 0x3FFE4350, len = 0x1BCB0
   drom0_0_seg(R): org = 0x3F400020, len = 0x400000-0x20
   rtc_iram_seg(RWX): org = 0x400C0000, len = 0x2000
   rtc_slow_seg(RW): org = 0x50000000, len = 0x1000
@@ -63,6 +78,7 @@ PHDRS
 {
   drom0_0_phdr PT_LOAD;
   dram0_0_phdr PT_LOAD;
+  dram0_1_phdr PT_LOAD;
   iram0_0_phdr PT_LOAD;
   irom0_0_phdr PT_LOAD;
 }
@@ -284,7 +300,7 @@ SECTIONS
      *("app_noinit.*")
      . = ALIGN (8);
     _app_end = ABSOLUTE(.);
-  } GROUP_LINK_IN(RAMABLE_REGION)
+  } GROUP_LINK_IN(RAMABLE_REGION_1)
 
 
   SECTION_DATA_PROLOGUE(_NOINIT_SECTION_NAME, (NOLOAD),)
@@ -294,7 +310,7 @@ SECTIONS
     *(".noinit.*")
     . = ALIGN (8);
     _heap_start = ABSOLUTE(.);
-  } GROUP_LINK_IN(RAMABLE_REGION)
+  } GROUP_LINK_IN(RAMABLE_REGION_1)
 
 #ifdef CONFIG_GEN_ISR_TABLES
 #include <linker/intlist.ld>
