@@ -144,5 +144,12 @@
 			label = "WDT_1";
 			status = "disabled";
 		};
+
+		wifi0 {
+			compatible = "espressif,esp32-wifi";
+			label = "WIFI_0";
+			status = "disabled";
+		};
+
 	};
 };
