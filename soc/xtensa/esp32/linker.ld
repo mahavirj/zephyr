@@ -198,7 +198,7 @@ SECTIONS
 
   SECTION_DATA_PROLOGUE(net,, ALIGN(4))
   {
-    _net_buf_pool_list = .;
+    _esp_net_buf_pool_list = .;
     KEEP(*(SORT_BY_NAME("._net_buf_pool.static.*")))
 
 #if defined(CONFIG_NETWORKING)
@@ -218,31 +218,89 @@ SECTIONS
 #undef Z_ITERABLE_SECTION_RAM
 #define Z_ITERABLE_SECTION_RAM(x, y)
 #include <linker/common-ram.ld>
+/* Restore original value for symbols referenced by `common-ram.ld` */
+_net_buf_pool_list = _esp_net_buf_pool_list;
 #pragma pop_macro("Z_ITERABLE_SECTION_RAM")
 
-  SECTION_DATA_PROLOGUE(log_static_section,,)
+  SECTION_PROLOGUE(_RODATA_SECTION_NAME,,ALIGN(20))
   {
-    __log_const_start = .;
+    _rodata_start = ABSOLUTE(.);
+
+#if defined(CONFIG_NET_SOCKETS)
+    . = ALIGN(4);
+    Z_LINK_ITERABLE(net_socket_register);
+    . = ALIGN(4);
+#endif
+
+    . = ALIGN(4);
+    __esp_log_const_start = .;
     KEEP(*(SORT(.log_const_*)));
-    __log_const_end = .;
+    __esp_log_const_end = .;
 
-    __log_backends_start = .;
+    . = ALIGN(4);
+    __esp_log_backends_start = .;
     KEEP(*("._log_backend.*"));
-    __log_backends_end = .;
-  } GROUP_LINK_IN(ROMABLE_REGION)
+    __esp_log_backends_end = .;
 
-  SECTION_DATA_PROLOGUE(shell_static_section,,)
- {
     . = ALIGN(4);
     Z_LINK_ITERABLE(shell);
     . = ALIGN(4);
 
-    __shell_root_cmds_start = .;
+    __esp_shell_root_cmds_start = .;
     KEEP(*(SORT(.shell_root_cmd_*)));
-    __shell_root_cmds_end = .;
+    __esp_shell_root_cmds_end = .;
+
+    . = ALIGN(4);
+    *(.rodata)
+    *(.rodata.*)
+    *(.gnu.linkonce.r.*)
+    *(.rodata1)
+    __XT_EXCEPTION_TABLE__ = ABSOLUTE(.);
+    KEEP (*(.xt_except_table))
+    KEEP (*(.gcc_except_table .gcc_except_table.*))
+    *(.gnu.linkonce.e.*)
+    *(.gnu.version_r)
+    KEEP (*(.eh_frame))
+    /*  C++ constructor and destructor tables, properly ordered:  */
+    KEEP (*crtbegin.o(.ctors))
+    KEEP (*(EXCLUDE_FILE (*crtend.o) .ctors))
+    KEEP (*(SORT(.ctors.*)))
+    KEEP (*(.ctors))
+    KEEP (*crtbegin.o(.dtors))
+    KEEP (*(EXCLUDE_FILE (*crtend.o) .dtors))
+    KEEP (*(SORT(.dtors.*)))
+    KEEP (*(.dtors))
+    /*  C++ exception handlers table:  */
+    __XT_EXCEPTION_DESCS__ = ABSOLUTE(.);
+    *(.xt_except_desc)
+    *(.gnu.linkonce.h.*)
+    __XT_EXCEPTION_DESCS_END__ = ABSOLUTE(.);
+    *(.xt_except_desc_end)
+    *(.dynamic)
+    *(.gnu.version_d)
+    . = ALIGN(4);               /* this table MUST be 4-byte aligned */
+    _rodata_end = ABSOLUTE(.);
   } GROUP_LINK_IN(ROMABLE_REGION)
 
+#pragma push_macro("Z_ITERABLE_SECTION_ROM")
+#pragma push_macro("ROMABLE_REGION")
+#undef Z_ITERABLE_SECTION_ROM
+#define Z_ITERABLE_SECTION_ROM(x,y)
+#undef ROMABLE_REGION
+/* This is to workaround limitation of `esptool` which needs single `FLASH` data segment
+ * which is already defined above. In case, `common-rom.ld` creates additional segments
+ * they will be placed in DRAM instead. */
+#define ROMABLE_REGION RAMABLE_REGION
 #include <linker/common-rom.ld>
+/* Restore original value for symbols referenced by `common-rom.ld` */
+__log_const_start = __esp_log_const_start;
+__log_const_end = __esp_log_const_end;
+__log_backends_start = __esp_log_backends_start;
+__log_backends_end = __esp_log_backends_end;
+__shell_root_cmds_start = __esp_shell_root_cmds_start;
+__shell_root_cmds_end = __esp_shell_root_cmds_end;
+#pragma pop_macro("ROMABLE_REGION")
+#pragma pop_macro("Z_ITERABLE_SECTION_ROM")
 
   SECTION_PROLOGUE(_TEXT_SECTION_NAME, , ALIGN(4))
   {
@@ -289,40 +347,6 @@ SECTIONS
     . = ALIGN(4);
   } GROUP_LINK_IN(RAMABLE_REGION)
 
-  SECTION_PROLOGUE(_RODATA_SECTION_NAME,,ALIGN(16))
-  {
-    _rodata_start = ABSOLUTE(.);
-    *(.rodata)
-    *(.rodata.*)
-    *(.gnu.linkonce.r.*)
-    *(.rodata1)
-    __XT_EXCEPTION_TABLE__ = ABSOLUTE(.);
-    KEEP (*(.xt_except_table))
-    KEEP (*(.gcc_except_table .gcc_except_table.*))
-    *(.gnu.linkonce.e.*)
-    *(.gnu.version_r)
-    KEEP (*(.eh_frame))
-    /*  C++ constructor and destructor tables, properly ordered:  */
-    KEEP (*crtbegin.o(.ctors))
-    KEEP (*(EXCLUDE_FILE (*crtend.o) .ctors))
-    KEEP (*(SORT(.ctors.*)))
-    KEEP (*(.ctors))
-    KEEP (*crtbegin.o(.dtors))
-    KEEP (*(EXCLUDE_FILE (*crtend.o) .dtors))
-    KEEP (*(SORT(.dtors.*)))
-    KEEP (*(.dtors))
-    /*  C++ exception handlers table:  */
-    __XT_EXCEPTION_DESCS__ = ABSOLUTE(.);
-    *(.xt_except_desc)
-    *(.gnu.linkonce.h.*)
-    __XT_EXCEPTION_DESCS_END__ = ABSOLUTE(.);
-    *(.xt_except_desc_end)
-    *(.dynamic)
-    *(.gnu.version_d)
-    . = ALIGN(4);               /* this table MUST be 4-byte aligned */
-    _rodata_end = ABSOLUTE(.);
-  } GROUP_LINK_IN(ROMABLE_REGION)
-
   .flash.text :
   {
     _stext = .;
@@ -361,7 +385,6 @@ SECTIONS
     . = ALIGN (8);
     _bss_end = ABSOLUTE(.);
   } GROUP_LINK_IN(RAMABLE_REGION)
-
 
   SECTION_DATA_PROLOGUE(_NOINIT_SECTION_NAME, (NOLOAD),)
   {
